@@ -1,0 +1,32 @@
+from flask import Flask, render_template,request
+from google import genai
+from dotenv import load_dotenv
+load_dotenv()
+import os
+
+app = Flask(__name__)
+
+# gemini api key
+client = genai.Client(api_key=os.getenv("api_key"))
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    quote = []
+    if request.method == "POST":
+        topic = request.form["topic"]
+        prompt = f"""
+        Generate a short inspirational quote about {topic}.
+        Each quote should be on a new line.
+        """
+
+        response = client.models.generate_content(
+            model="models/gemini-flash-latest",
+            contents = prompt
+        )
+
+        quote = response.text.strip().split("\n")
+
+    return render_template("index.html", quote=quote)
+
+if __name__ == "__main__":
+    app.run(debug=True)
